@@ -1,0 +1,10 @@
+FROM registry.access.redhat.com/ubi9/ubi:9.4
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+RUN curl -s -L https://repo.download.nvidia.com/jetson/rhel-9.4/jp6.1/nvidia-l4t.repo | \
+    tee /etc/yum.repos.d/nvidia-l4t.repo && \
+    dnf -y install nvidia-jetpack-tools && \
+    dnf clean all
+
+RUN --mount=type=bind,src=.,dst=/src uv venv /app && \
+    VIRTUAL_ENV=/app uv pip install /src
