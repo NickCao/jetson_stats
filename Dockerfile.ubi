@@ -1,10 +1,13 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.4
+FROM docker.io/rockylinux/rockylinux:9.4
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 RUN curl -s -L https://repo.download.nvidia.com/jetson/rhel-9.4/jp6.1/nvidia-l4t.repo | \
     tee /etc/yum.repos.d/nvidia-l4t.repo && \
-    dnf -y install nvidia-jetpack-tools && \
+    dnf -y install nvidia-jetpack-tools nvidia-jetpack-nvpmodel nvidia-jetpack-nvfancontrol && \
     dnf clean all
+RUN groupadd jtop
 
-RUN --mount=type=bind,src=.,dst=/src uv venv /app && \
-    VIRTUAL_ENV=/app uv pip install /src
+ADD . /src
+RUN uv venv /app && VIRTUAL_ENV=/app uv pip install /src
+ENV JTOP_SERVICE=True
+ENTRYPOINT ["/app/bin/jtop"]
